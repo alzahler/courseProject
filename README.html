@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<!-- saved from url=(0014)about:internet -->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta http-equiv="x-ua-compatible" content="IE=9" >
+
+<title>Course Project for &ldquo;Getting and Cleaning Data&rdquo;</title>
+
+<style type="text/css">
+body, td {
+   font-family: sans-serif;
+   background-color: white;
+   font-size: 12px;
+   margin: 8px;
+}
+
+tt, code, pre {
+   font-family: 'DejaVu Sans Mono', 'Droid Sans Mono', 'Lucida Console', Consolas, Monaco, monospace;
+}
+
+h1 { 
+   font-size:2.2em; 
+}
+
+h2 { 
+   font-size:1.8em; 
+}
+
+h3 { 
+   font-size:1.4em; 
+}
+
+h4 { 
+   font-size:1.0em; 
+}
+
+h5 { 
+   font-size:0.9em; 
+}
+
+h6 { 
+   font-size:0.8em; 
+}
+
+a:visited {
+   color: rgb(50%, 0%, 50%);
+}
+
+pre {	
+   margin-top: 0;
+   max-width: 95%;
+   border: 1px solid #ccc;
+   white-space: pre-wrap;
+}
+
+pre code {
+   display: block; padding: 0.5em;
+}
+
+code.r, code.cpp {
+   background-color: #F8F8F8;
+}
+
+table, td, th {
+  border: none;
+}
+
+blockquote {
+   color:#666666;
+   margin:0;
+   padding-left: 1em;
+   border-left: 0.5em #EEE solid;
+}
+
+hr {
+   height: 0px;
+   border-bottom: none;
+   border-top-width: thin;
+   border-top-style: dotted;
+   border-top-color: #999999;
+}
+
+@media print {
+   * { 
+      background: transparent !important; 
+      color: black !important; 
+      filter:none !important; 
+      -ms-filter: none !important; 
+   }
+
+   body { 
+      font-size:12pt; 
+      max-width:100%; 
+   }
+       
+   a, a:visited { 
+      text-decoration: underline; 
+   }
+
+   hr { 
+      visibility: hidden;
+      page-break-before: always;
+   }
+
+   pre, blockquote { 
+      padding-right: 1em; 
+      page-break-inside: avoid; 
+   }
+
+   tr, img { 
+      page-break-inside: avoid; 
+   }
+
+   img { 
+      max-width: 100% !important; 
+   }
+
+   @page :left { 
+      margin: 15mm 20mm 15mm 10mm; 
+   }
+     
+   @page :right { 
+      margin: 15mm 10mm 15mm 20mm; 
+   }
+
+   p, h2, h3 { 
+      orphans: 3; widows: 3; 
+   }
+
+   h2, h3 { 
+      page-break-after: avoid; 
+   }
+}
+
+</style>
+
+
+
+<!-- MathJax scripts -->
+<script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/2.0-latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+
+</head>
+
+<body>
+<h1>Course Project for &ldquo;Getting and Cleaning Data&rdquo;</h1>
+
+<p>First, I set up the working directory and loaded the required libraries:</p>
+
+<pre><code>setwd(&quot;~&quot;)
+library(reshape2)
+</code></pre>
+
+<p>The first task was:</p>
+
+<h2>1 Merge the training and the test sets to create one data set</h2>
+
+<p>For this, I loaded the relevant files, for the Test set first:</p>
+
+<pre><code>subject_test &lt;- read.table(&quot;./UCI HAR Dataset/test/subject_test.txt&quot;, sep =&quot;&quot;, header = FALSE) 
+X_test &lt;- read.table(&quot;./UCI HAR Dataset/test/X_test.txt&quot;, sep =&quot;&quot;, header = FALSE) 
+Y_test &lt;- read.table(&quot;./UCI HAR Dataset/test/y_test.txt&quot;, sep =&quot;&quot;, header = FALSE) 
+</code></pre>
+
+<p>&hellip; and then for the Train set.</p>
+
+<pre><code>subject_train &lt;- read.table(&quot;./UCI HAR Dataset/train/subject_train.txt&quot;, sep =&quot;&quot;, header = FALSE) 
+X_train &lt;- read.table(&quot;./UCI HAR Dataset/train/X_train.txt&quot;, sep =&quot;&quot;, header = FALSE) 
+Y_train &lt;- read.table(&quot;./UCI HAR Dataset/train/y_train.txt&quot;, sep =&quot;&quot;, header = FALSE) 
+</code></pre>
+
+<p>It is important to note that subject_train contains information od the ID of the volunteer in the experiment, <code>Y_train</code> corresponds to the Activity the person was doing and <code>X_Train</code> correspond to the data of the measurments, in different units and domains.</p>
+
+<pre><code>#Merging Training Set First
+tr &lt;- cbind(subject_train, Y_train, X_train)
+
+# Merging Test Set
+t &lt;- cbind(subject_test, Y_test, X_test)
+
+#Merging Both
+total &lt;- rbind(tr,t)
+</code></pre>
+
+<p>The merged dataset, <code>total</code>, has the train data at the top and the test data at the bottom. Also, the 1st column corresponds to the subject variables, the second to the activity, and the following columns show the other variables of the data.
+The dimensions of <code>total</code> is a dataframe of 10299 x 563.</p>
+
+<h2>2. Extract only the measurements on the mean and standard deviation for each measurement. </h2>
+
+<p>For this task, I used the features.txt file that has the names of all the 561 variables. </p>
+
+<pre><code>features &lt;- read.table(&quot;./UCI HAR Dataset/features.txt&quot;, sep =&quot;&quot;, stringsAsFactors = FALSE, header = FALSE) 
+features &lt;- features[,2]
+</code></pre>
+
+<p>The 1 dimensional vector <code>features</code> has the names of all the quantitative variables. 
+Then, I constructed a regular expression that could match the text &ldquo;mean()&rdquo; and &ldquo;std()&rdquo;. I chose these two expressions because they indicate the correct statistic - mean and standard deviation - for each variable, as explained in the features_info.txt file.</p>
+
+<pre><code>#which columns - indexes - correspond mean or standard deviation
+regex &lt;- grep(&quot;[Mm]ean\\(\\)|std\\(\\)&quot;, features, value = FALSE)
+ids &lt;- 2 + regex
+</code></pre>
+
+<p><code>regex</code> returns the index where the expression matched the text. Then, I had to add the constant 2 in order to shift the index since the quantitative data starts at index 3 in the <code>total</code> data frame.</p>
+
+<p>Finally, I created a subset of the data with these.</p>
+
+<pre><code>#Creating the new dataset, only with mean() &amp; std()
+mydata &lt;- cbind(total[,1:2], total[,ids], deparse.level = 0)
+</code></pre>
+
+<p>There were 66 variables that corresponded to mean or standard deviation measures.</p>
+
+<h2>3. Use descriptive activity names to name the activities in the data set</h2>
+
+<p>First, I gave names to the first two variables: the subject and the activity,</p>
+
+<pre><code>#Giving names to Subject and Activity columns
+names(mydata)[1:2] &lt;- c(&quot;subject&quot;,&quot;activity&quot;)
+</code></pre>
+
+<p>Then, I used the same regex built before to get the variable&#39;s names , and then I transformed them by deleting the brackets, the hyphens and the dots. Also, I used the lower case function. I found that the names of the variables were self explanatory and didn&#39;t need any further changes.</p>
+
+<pre><code>#Assigning and cleaning measurement&#39;s names
+#delete &quot;()&quot; , &quot;.&quot; and &quot;-&quot;
+feat.mydata &lt;- features[regex]
+feat.mydata &lt;-tolower(gsub(&quot;\\(\\)|-&quot;, &quot;&quot;, feat.mydata))
+</code></pre>
+
+<p>Finally, I assigned these cleaned names to the variables names.</p>
+
+<pre><code>names(mydata)[3:dim(mydata)[2]] &lt;- feat.mydata
+</code></pre>
+
+<h2>4. Appropriately labels the data set with descriptive activity names. </h2>
+
+<p>First, I loaded the acitivties&#39; labels to <code>a.labels</code>, and then using the function factor() gave the names to the corresponding values</p>
+
+<pre><code>#Activities
+a.labels &lt;- read.table(&quot;./UCI HAR Dataset/activity_labels.txt&quot;, sep =&quot;&quot;, header = FALSE) 
+
+mydata$activity &lt;- factor(mydata$activity, a.labels[,1], a.labels[,2])
+</code></pre>
+
+<h2>5 Creates a second, independent tidy data set with the average of each variable for each activity and each subject. </h2>
+
+<p>For the final task, I first built a constituancy table to check basic summary stats.</p>
+
+<pre><code>freq.by.pairs &lt;- table(mydata$subject,mydata$activity); freq.by.pairs
+</code></pre>
+
+<p>Then, I used the melt function from the reshape2 library to first melt the data using the variables <code>subject</code> and <code>activity</code> as pivots.</p>
+
+<pre><code>melt.mydata = melt(mydata, id = c(&quot;subject&quot;, &quot;activity&quot;))
+</code></pre>
+
+<p>Finally, I reconstructed the dataframe into a new one, using the dcast() function, with the mean as function argument, as asked.</p>
+
+<pre><code>tidy.data &lt;- dcast(melt.mydata, formula = subject + activity ~ variable,mean)
+</code></pre>
+
+<p>The result is a dataframe that combines subject and activity, and the corresponding average value for the 66 variables.</p>
+
+<p>The last instruction in R was to export the tidy data into a .CSV file in the working directory.</p>
+
+<pre><code>write.csv(tidy.data, &quot;./tidyData.csv&quot;) 
+</code></pre>
+
+</body>
+
+</html>
+
