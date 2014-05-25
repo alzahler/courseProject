@@ -58,7 +58,7 @@ features <- features[,2]
 ```
 
 The 1 dimensional vector `features` has the names of all the quantitative variables. 
-Then, I constructed a regular expression that could match the text "mean()" and "std()". I chose these two expressions because they indicate the correct statistic - mean and standard deviation - for each variable, as explained in the features_info.txt file.
+Then, I constructed a regular expression that could match the text "mean()" and "std()". I chose these two expressions because they indicate the correct statistic - mean and standard deviation - for each variable, as explained in the features_info.txt file. 
 
 
 ```
@@ -75,7 +75,24 @@ Finally, I created a subset of the data with these.
 mydata <- cbind(total[,1:2], total[,ids], deparse.level = 0)
 ```
 
-There were 66 variables that corresponded to mean or standard deviation measures.
+There were 66 variables that corresponded to mean or standard deviation measures:
+* tBodyAcc-XYZ, mean & std (6)
+* tGravityAcc-XYZ, mean & std (6)
+* tBodyAccJerk-XYZ, mean & std (6)
+* tBodyGyro-XYZ, mean & std (6)
+* tBodyGyroJerk-XYZ, mean & std (6)
+* tBodyAccMag, mean & std (2)
+* tGravityAccMag, mean & std (2)
+* tBodyAccJerkMag, mean & std (2)
+* tBodyGyroMag, mean & std (2)
+* tBodyGyroJerkMag, mean & std (2)
+* fBodyAcc-XYZ, mean & std (6)
+* fBodyAccJerk-XYZ, mean & std (6)
+* fBodyGyro-XYZ, mean & std (6)
+* fBodyAccMag, mean & std (2)
+* fBodyAccJerkMag, mean & std (2)
+* fBodyGyroMag, mean & std (2)
+* fBodyGyroJerkMag, mean & std (2)
 
 
 3. Use descriptive activity names to name the activities in the data set
@@ -111,15 +128,19 @@ First, I loaded the activities' labels to `a.labels`, and then using the functio
 #Activities
 a.labels <- read.table("./UCI HAR Dataset/activity_labels.txt", sep ="", header = FALSE) 
 
+a.labels[,2] <- tolower(sub("_", "", a.labels[,2]))
 mydata$activity <- factor(mydata$activity, a.labels[,1], a.labels[,2])
 ```
+`a.labels[,1]` is vector with values 1 to 6, and  `a.labels[,2]` vector has the corresponding label (walking, walkingupstairs, walkingdownstairs, sitting, standing,laying) that had the under scores deleted and forced to lower case letters.
+
 
 5. Creates a second, independent tidy data set with the average of each variable for each activity and each subject. 
 ---------
 
-For the final task, I first built a constituency table to check basic summary stats.
+For the final task, I first built a constituency table to check basic summary stats, and coersed the subject variable into a factor.
 ```
 freq.by.pairs <- table(mydata$subject,mydata$activity); freq.by.pairs
+mydata$subject <- as.factor(mydata$subject)
 ```
 Then, I used the melt function from the reshape2 library to first melt the data using the variables `subject` and `activity` as pivots.
 ```
